@@ -9,29 +9,74 @@ const Usuario = require('../models/usuario');
 // ====================================
 //  Obtener todos los usuarios
 // ====================================
-app.get('/', (req, res, next) => {
+app.get('/', (req, res) => {
 
-    Usuario.find({}, 'nombre email img role').exec(
-        (err, usuarios) => {
+    let desde = req.query.desde || 0;
 
-            if (err) {
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: 'Error cargando usuarios',
-                    errors: err
+    desde = Number(desde);
+
+    Usuario.find({}, 'nombre email img role')
+        .skip(desde)
+        .limit(5)
+        .exec(
+            (err, usuarios) => {
+
+                if (err) {
+                    return res.status(500).json({
+                        ok: false,
+                        mensaje: 'Error cargando usuarios',
+                        errors: err
+                    });
+                }
+
+                Usuario.count({}, (err, cantidadTotal) => {
+
+                    res.status(200).json({
+                        ok: true,
+                        usuarios,
+                        total: cantidadTotal
+                    });
+
                 });
+
             }
-
-            res.status(200).json({
-                ok: true,
-                usuarios
-            });
-
-        }
-    );
+        );
 
 });
 
+
+// ====================================
+//  Crear nuevo usuario
+// ====================================
+app.post('/', mdAutenticacion.verificaToken, (req, res) => {
+    const body = req.body;
+
+    const usuario = new Usuario({
+        nombre: body.nombre,
+        email: body.email,
+        password: bcrypt.hashSync(body.password, 10),
+        img: body.img,
+        role: body.role.toUpperCase()
+    });
+
+    usuario.save((err, usuarioGuardado) => {
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                mensaje: 'Error al crear usuario',
+                errors: err
+            });
+        }
+
+        res.status(201).json({
+            ok: true,
+            usuario: usuarioGuardado,
+            usuarioToken: req.usuario
+        });
+
+    });
+
+});
 
 
 // ====================================
@@ -82,40 +127,6 @@ app.put('/:id', mdAutenticacion.verificaToken, (req, res) => {
             });
         });
     });
-});
-
-
-// ====================================
-//  Crear nuevo usuario
-// ====================================
-app.post('/', mdAutenticacion.verificaToken, (req, res) => {
-    const body = req.body;
-
-    const usuario = new Usuario({
-        nombre: body.nombre,
-        email: body.email,
-        password: bcrypt.hashSync(body.password, 10),
-        img: body.img,
-        role: body.role.toUpperCase()
-    });
-
-    usuario.save((err, usuarioGuardado) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                mensaje: 'Error al crear usuario',
-                errors: err
-            });
-        }
-
-        res.status(201).json({
-            ok: true,
-            usuario: usuarioGuardado,
-            usuarioToken: req.usuario
-        });
-
-    });
-
 });
 
 
