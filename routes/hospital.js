@@ -4,6 +4,41 @@ const mdAutenticacion = require('../middlewares/autenticacion');
 
 const Hospital = require('../models/hospital');
 
+// ====================================
+//  Obtener hospital por ID
+// ====================================
+app.get('/:id', (req, res) => {
+    const id = req.params.id;
+
+    Hospital.findById(id)
+        .populate('usuario', 'nombre img email')
+        .exec((err, hospital) => {
+
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
+                    mensaje: 'Error al buscar hospital',
+                    errors: err
+                });
+            }
+
+            if (!hospital) {
+                return res.status(400).json({
+                    ok: false,
+                    mensaje: 'El hospital con el ' + id + 'no existe',
+                    errors: {
+                        message: 'No existe un hospital con ese ID'
+                    }
+                });
+            }
+
+            return res.status(200).json({
+                ok: true,
+                hospital
+            });
+        });
+});
+
 
 // ====================================
 //  Obtener todos los hospitales
@@ -55,9 +90,7 @@ app.post('/', mdAutenticacion.verificaToken, (req, res) => {
     const body = req.body;
 
     const newHospital = new Hospital({
-        nombre: body.nombre,
-        img: body.img,
-        usuario: body.usuario._id
+        nombre: body.nombre
     });
 
     newHospital.save((err, hospitalCreado) => {
@@ -81,15 +114,17 @@ app.post('/', mdAutenticacion.verificaToken, (req, res) => {
 //  Actualizar hospital
 // ====================================
 app.put('/', mdAutenticacion.verificaToken, (req, res) => {
-    const hospitalToUpdate = req.body.hospital;
+    const hospital = req.body.hospital;
+
+    console.log('hreq.body: ', req.body);
 
     Hospital
         .findByIdAndUpdate(
-            hospitalToUpdate._id,
+            hospital._id,
 
             {
-                nombre: hospitalToUpdate.nombre,
-                img: hospitalToUpdate.img
+                nombre: hospital.nombre,
+                img: hospital.img
             },
 
             {

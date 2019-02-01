@@ -36,14 +36,51 @@ app.get('/', (req, res) => {
             }
 
             Medico.count({}, (err, cantidadTotal) => {
-
                 res.status(200).json({
                     ok: true,
-                    medicos: medicos,
+                    medicos,
                     total: cantidadTotal
                 });
 
             });
+        });
+});
+
+
+// ====================================
+//  Obtener medico
+// ====================================
+app.get('/:id', (req, res) => {
+    const id = req.params.id;
+
+    Medico.findById(id)
+        .populate('hospital')
+        .populate('usuario', 'nombre email img')
+        .exec((err, medico) => {
+
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    mensaje: 'Error al buscar medico por _id',
+                    errors: err
+                });
+            }
+
+            if (!medico) {
+                return res.status(400).json({
+                    ok: false,
+                    mensaje: 'No existe un medico con ese ID',
+                    errors: {
+                        message: 'No existe un medico con ese ID'
+                    }
+                });
+            }
+
+            res.status(200).json({
+                ok: true,
+                medico
+            });
+
         });
 });
 
@@ -54,11 +91,13 @@ app.get('/', (req, res) => {
 app.post('/', mdAutenticacion.verificaToken, (req, res) => {
     const body = req.body;
 
+    console.log('body', body);
+
     const newMedico = new Medico({
         nombre: body.nombre,
         img: body.img,
-        usuario: body.usuario_id,
-        hospital: body.hospital_id
+        usuario: body.usuario,
+        hospital: body.hospital
     });
 
     newMedico.save((err, medicoCreado) => {
@@ -83,7 +122,7 @@ app.post('/', mdAutenticacion.verificaToken, (req, res) => {
 //  Actualizar medico
 // ====================================
 app.put('/', mdAutenticacion.verificaToken, (req, res) => {
-    const medicoBody = req.body.medico;
+    const medicoBody = req.body;
 
     Medico
         .findByIdAndUpdate(

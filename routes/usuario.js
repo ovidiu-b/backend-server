@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 
     desde = Number(desde);
 
-    Usuario.find({}, 'nombre email img role')
+    Usuario.find({}, 'nombre email img role google')
         .skip(desde)
         .limit(5)
         .exec(
@@ -41,14 +41,13 @@ app.get('/', (req, res) => {
 
             }
         );
-
 });
 
 
 // ====================================
 //  Crear nuevo usuario
 // ====================================
-app.post('/', mdAutenticacion.verificaToken, (req, res) => {
+app.post('/', (req, res) => {
     const body = req.body;
 
     const usuario = new Usuario({
@@ -56,7 +55,7 @@ app.post('/', mdAutenticacion.verificaToken, (req, res) => {
         email: body.email,
         password: bcrypt.hashSync(body.password, 10),
         img: body.img,
-        role: body.role.toUpperCase()
+        role: body.role ? body.role.toUpperCase() : "USER_ROLE"
     });
 
     usuario.save((err, usuarioGuardado) => {
@@ -82,7 +81,7 @@ app.post('/', mdAutenticacion.verificaToken, (req, res) => {
 // ====================================
 //  Actualizar usuario
 // ====================================
-app.put('/:id', mdAutenticacion.verificaToken, (req, res) => {
+app.put('/:id', [mdAutenticacion.verificaToken, mdAutenticacion.verificaAdmin_o_MismoUsuario], (req, res) => {
     const id = req.params.id;
 
     Usuario.findById(id, (err, usuario) => {
@@ -134,7 +133,7 @@ app.put('/:id', mdAutenticacion.verificaToken, (req, res) => {
 //  Borrar usuario
 // ====================================
 
-app.delete('/:id', mdAutenticacion.verificaToken, (req, res) => {
+app.delete('/:id', [mdAutenticacion.verificaToken, mdAutenticacion.verificaAdmin], (req, res) => {
     const id = req.params.id;
 
     Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {

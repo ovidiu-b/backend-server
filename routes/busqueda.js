@@ -41,7 +41,7 @@ app.get('/hospital/:busqueda', (req, res) => {
         .then(hospitales => {
             res.status(200).json({
                 ok: true,
-                hospitales: hospitales
+                hospitales
             });
         })
         .catch(err => {
@@ -109,7 +109,7 @@ function buscarHospitales(busqueda, regex) {
         Hospital.find({
                 nombre: regex
             })
-            .populate('usuario', 'nombre email')
+            .populate('usuario', 'nombre email img')
             .exec((err, hospitales) => {
 
                 console.log(hospitales);
@@ -134,7 +134,7 @@ function buscarMedicos(busqueda, regex) {
         Medico.find({
                 nombre: regex
             })
-            .populate('usuario', 'nombre email')
+            .populate('usuario', 'nombre email img')
             .populate('hospita')
             .exec((err, medicos) => {
 
@@ -154,7 +154,7 @@ function buscarUsuarios(busqueda, regex) {
 
     return new Promise((resolve, reject) => {
 
-        Usuario.find({}, 'nombre email')
+        Usuario.find({}, 'nombre email img')
             .or([{
                 'nombre': regex
             }, {
