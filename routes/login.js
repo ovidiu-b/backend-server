@@ -161,7 +161,7 @@ app.post('/', (req, res) => {
 
         } else {
 
-            usuarioEncontrado.password = '.I.';
+            usuarioEncontrado.password = ':)';
 
             const token = jwt.sign({
                 usuario: usuarioEncontrado
